@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>QUIZZ</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        /* --- [ RESET & GLOBAL STYLES ] --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Variabel Warna Tema Material Design */
+        :root {
+            --color-primary: #2196F3;
+            --color-primary-dark: #1976D2;
+            --color-primary-light: #BBDEFB;
+            --color-accent: #FF4081;
+            --color-text: #212121;
+            --color-text-secondary: #757575;
+            --color-background: #FAFAFA;
+            --color-surface: #FFFFFF;
+            --color-error: #F44336;
+            --color-success: #4CAF50;
+            --color-warning: #FF9800;
+            --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+            --border-radius: 8px;
+            --font-heading: 'Poppins', sans-serif;
+            --font-body: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-text);
+            font-family: var(--font-body);
+            font-size: 16px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--color-primary-dark);
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--color-text-secondary);
+        }
+
+        /* --- [ LOADING SCREEN ] --- */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-background);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+
+        .loader-logo {
+            font-size: 48px;
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .loader-text {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--color-primary);
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 4px;
+            background-color: var(--color-primary-light);
+            border-radius: 2px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--color-primary);
+            width: 0%;
+            animation: loading 2s ease-in-out forwards;
+        }
+
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Sembunyikan loader saat selesai */
+        #loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Sembunyikan konten utama saat loading */
+        .wrapper {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        
+        .wrapper.loaded {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* --- [ LAYOUT & COMPONENTS ] --- */
+        .wrapper {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .header, .footer {
+            text-align: center;
+            padding: 24px;
+            margin-bottom: 24px;
+            background-color: var(--color-surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-1);
+        }
+
+        .footer {
+            margin-top: 24px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: var(--color-text-secondary);
+        }
+
+        /* --- [ CARD STYLING (Material Design) ] --- */
+        .quiz-card {
+            background: var(--color-surface);
+            padding: 24px;
+            margin-bottom: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-1);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .quiz-card:hover {
+            box-shadow: var(--shadow-2);
+            transform: translateY(-2px);
+        }
+        
+        #quiz {
+            border: none;
+            box-shadow: none;
+            background: transparent;
+            padding: 0;
+        }
+
+        /* --- [ STYLING FORM (Input, Tombol, Opsi) ] --- */
+        input[type="text"] {
+            width: 100%;
+            padding: 16px;
+            background: var(--color-surface);
+            border: 2px solid #E0E0E0;
+            border-radius: var(--border-radius);
+            color: var(--color-text);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        /* Custom Radio Button */
+        #options div {
+            margin-bottom: 16px;
+        }
+
+        #options input[type="radio"] {
+            display: none;
+        }
+
+        #options label {
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding: 16px 16px 16px 56px;
+            cursor: pointer;
+            border: 2px solid #E0E0E0;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        /* Kotak kustom (sebelum) */
+        #options label::before {
+            content: "";
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #BDBDBD;
+            border-radius: 50%;
+            background: var(--color-surface);
+            transition: all 0.3s ease;
+        }
+
+        /* Indikator tercentang (sesudah) */
+        #options label::after {
+            content: "";
+            position: absolute;
+            left: 22px;
+            top: 50%;
+            transform: translateY(-50%) scale(0);
+            width: 8px;
+            height: 8px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        #options input[type="radio"]:checked + label {
+            background: rgba(33, 150, 243, 0.04);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        #options input[type="radio"]:checked + label::before {
+            border-color: var(--color-primary);
+        }
+
+        #options input[type="radio"]:checked + label::after {
+            transform: translateY(-50%) scale(1);
+        }
+
+        #options label:hover {
+            background: rgba(33, 150, 243, 0.04);
+            border-color: #BDBDBD;
+        }
+
+        /* --- [ STYLING TOMBOL ] --- */
+        .btn {
+            padding: 12px 24px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: none;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            margin-right: 12px;
+            margin-top: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-1);
+        }
+
+        .btn:hover {
+            box-shadow: var(--shadow-2);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-1);
+        }
+
+        /* Primary (Mulai/Berikutnya) */
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+        }
+
+        /* Success (Berikutnya) */
+        .btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+        .btn-success:hover {
+            background: #388E3C;
+        }
+
+        /* Warning (Kembali) */
+        .btn-warning {
+            background: var(--color-warning);
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #F57C00;
+        }
+
+        .btn .material-icons {
+            margin-right: 8px;
+        }
+
+        #feedback {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .question-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-1);
+        }
+
+        /* --- [ ANIMASI ] --- */
+        .animate-in {
+            animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- [ PROGRESS INDICATOR ] --- */
+        .progress-container {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            background: var(--color-surface);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-1);
+        }
+
+        .progress-label {
+            font-family: var(--font-heading);
+            font-weight: 500;
+            margin-right: 16px;
+            min-width: 80px;
+        }
+
+        .progress-bar-horizontal {
+            flex-grow: 1;
+            height: 8px;
+            background: #E0E0E0;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill-horizontal {
+            height: 100%;
+            background: var(--color-primary);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-fill-horizontal::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.5) 50%, 
+                transparent 100%);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            margin-left: 16px;
+            font-weight: 500;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* --- [ RESPONSIVE DESIGN ] --- */
+        @media (max-width: 768px) {
+            .wrapper {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .quiz-card {
+                padding: 16px;
+            }
+            
+            .progress-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .progress-label, .progress-text {
+                margin-bottom: 8px;
+            }
+            
+            .progress-bar-horizontal {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loader">
+    <div class="loader-logo">
+        <span class="material-icons">school</span>
+    </div>
+    <div class="loader-text">Memuat QUIZZ</div>
+    <div class="progress-bar">
+        <div class="progress-fill"></div>
+    </div>
+</div>
+
+<div class="header">
+    <h1>QUIZZ_KU</h1>
+    <p>Uji pengetahuanmu tentang Al-Qur'an dan Hadits</p>
+</div>
+
+<div class="wrapper" id="mainWrapper">
+    <div id="welcome" class="quiz-card text-center animate-in">
+        <h2>Bismillah, kerjakan dengan teliti dan semangat</h2>
+        <p>Masukkan Nama Anda:</p>
+        <input type="text" id="namaMurid" placeholder="Nama Murid">
+        <button class="btn btn-primary" onclick="startQuiz()">
+            <span class="material-icons">play_arrow</span>
+            Mulai Kuis
+        </button>
+    </div>
+
+    <div id="quiz" style="display:none;">
+        <div class="progress-container">
+            <div class="progress-label">Progress</div>
+            <div class="progress-bar-horizontal">
+                <div class="progress-fill-horizontal" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0/35</div>
+        </div>
+        
+        <div id="question" class="quiz-card"></div>
+        <div id="options" class="quiz-card"></div>
+        <button class="btn btn-success" onclick="nextQuestion()">
+            <span class="material-icons">arrow_forward</span>
+            Pertanyaan Berikutnya
+        </button>
+        <p id="feedback"></p>
+        
+        <div class="progress-container">
+            <div class="progress-label">Skor</div>
+            <div class="progress-bar-horizontal">
+                <div class="progress-fill-horizontal" id="score-bar" style="width: 0%"></div>
+            </div>
+            <div id="score" class="progress-text">0</div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-label">Nyawa</div>
+            <div class="progress-bar-horizontal">
+                <div class="progress-fill-horizontal" id="lives-bar" style="width: 100%"></div>
+            </div>
+            <div id="lives" class="progress-text">5</div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>&copy; 2025 QUIZZ_KU</p>
+</div>
+
+<script>
+// --- [ DATA SOAL ] ---
+const questions = [
+    {
+        "question": "1. An-nasr artinya ....",
+        "options": ["manusia", "pertolongan", "subuh"],
+        "answer": 1
+    },
+    {
+        "question": "2. Idza ja'a nashrullahi wal ....",
+        "options": ["falaq", "an-nas", "fath"],
+        "answer": 2
+    },
+    {
+        "question": "3. Berikut ini yang termasuk ayat surat An-nasr adalah ....",
+        "options": ["wa min syarri hasidin idza hasad", "wa raitan-nasa yadkhuluna fii di nillahi afwaja", "ilahi-n nas"],
+        "answer": 1
+    },
+    {
+        "question": "4. Ayat pertama surat An-nasr berbunyi ....",
+        "options": ["malikin nas", "idza ja'a nasrullahi wal fath", "wa min syarrin-naffa tsatifil uqod"],
+        "answer": 1
+    },
+    {
+        "question": "5. Surat An-nasr terdiri dari .... ayat",
+        "options": ["tiga", "enam", "sembilan"],
+        "answer": 0
+    },
+    {
+        "question": "6. Nabi yang terakhir adalah nabi ....",
+        "options": ["Adam", "Ibrahim", "Muhammad"],
+        "answer": 2
+    },
+    {
+        "question": "7. Nabi Muhammad membawa agama ....",
+        "options": ["Kristen", "Katolik", "Islam"],
+        "answer": 2
+    },
+    {
+        "question": "8. Setiap orang beriman wajib .... Nabi Muhammad.",
+        "options": ["meneladani", "melihat", "menceritakan"],
+        "answer": 0
+    },
+    {
+        "question": "9. Kita mengetahui akhlak Nabi Muhammad dari ....",
+        "options": ["hadits", "dongeng", "nyanyian"],
+        "answer": 0
+    },
+    {
+        "question": "10. Nabi mengajarkan manusia untuk selalu berbuat ....",
+        "options": ["baik", "buruk", "jahat"],
+        "answer": 0
+    },
+    {
+        "question": "11. Kita harus .... Nabi Muhammad",
+        "options": ["mencintai", "membenci", "menjauhi"],
+        "answer": 0
+    },
+    {
+        "question": "12. Nabi Muhammad mengajari manusia untuk berbuat ....",
+        "options": ["jahat", "baik", "curang"],
+        "answer": 1
+    },
+    {
+        "question": "13. Berikut ini yang termasuk akhlak Nabi Muhammad adalah ....",
+        "options": ["berkata bohong", "berbuat curang", "berkata jujur"],
+        "answer": 2
+    },
+    {
+        "question": "14. Mencelakai orang lain adalah perbuatan ....",
+        "options": ["baik", "santun", "buruk"],
+        "answer": 2
+    },
+    {
+        "question": "15. Dibawah ini yang termasuk perbuatan mencelakai orang lain adalah ....",
+        "options": ["bersedekah", "menolong", "memukul"],
+        "answer": 2
+    },
+    {
+        "question": "16. Sebelum membaca Surah Al-Lahab kita membaca ta'awudz dan ....",
+        "options": ["takbir", "basmalah", "hamdalah"],
+        "answer": 1
+    },
+    {
+        "question": "17. Ayat ketiga Surah Al-Lahab berbunyi ....",
+        "options": ["alhamdu lillāhi rabbil-'ālamīn", "sayashlānārān dzātā lahab", "allāhush-shamad"],
+        "answer": 1
+    },
+    {
+        "question": "18. Ayat kelima Surah Al-Lahab berbunyi ....",
+        "options": ["lam yalid walam yūlad", "minal-jinnāti wan-nās", "fi jī dihā hablum-mim-masad"],
+        "answer": 2
+    },
+    {
+        "question": "19. Paman Nabi yang jahat bernama ....",
+        "options": ["Abu Thalib", "Abu Lahab", "Hamzah"],
+        "answer": 1
+    },
+    {
+        "question": "20. Orang yang berbuat jahat akan mendapat ....",
+        "options": ["pahala", "kebaikan", "siksa"],
+        "answer": 2
+    },
+    {
+        "question": "21. Surah An-Nashr diturunkan di ....",
+        "options": ["Makkah", "Madinah", "Palestina"],
+        "answer": 0
+    },
+    {
+        "question": "22. Kaum yang memusuhi Nabi adalah ....",
+        "options": ["kaum kafir Quraisy", "kaum Tsamud", "kaum Ad"],
+        "answer": 0
+    },
+    {
+        "question": "23. Ketika mendapat pertolongan Allah kita harus ....",
+        "options": ["bersedih", "bersyukur", "berkeluh kesah"],
+        "answer": 1
+    },
+    {
+        "question": "24. Kita berdoa memohon pertolongan kepada ....",
+        "options": ["Allah", "malaikat", "nabi"],
+        "answer": 0
+    },
+    {
+        "question": "25. Orang yang belajar Al-Qur'an adalah orang yang ....",
+        "options": ["mulia", "hina", "bodoh"],
+        "answer": 0
+    },
+    {
+        "question": "26. Huruf hijaiah bertanda tasydid dibaca ....",
+        "options": ["dobel", "mati", "panjang"],
+        "answer": 0
+    },
+    {
+        "question": "27. Huruf hijaiah yang diberi tanda baca tasydid hurufnya menjadi ....",
+        "options": ["satu", "dua", "tiga"],
+        "answer": 1
+    },
+    {
+        "question": "28. Berikut ini tanda tasydid adalah ....",
+        "options": ["ّ", "ْ", "ً"],
+        "answer": 0
+    },
+    {
+        "question": "29. Contoh lafaz yang didahului huruf kha adalah ....",
+        "options": ["خَلاة", "حَكَمَ", "كَتَبَ"],
+        "answer": 0
+    },
+    {
+        "question": "30. Lafal yang tidak bertanda tasydid adalah ....",
+        "options": ["كُلٌّ", "مُتَكَامِلٌ", "نَبِيٌّ"],
+        "answer": 1
+    },
+    {
+        "question": "31. Pada lafaz رَسُولٌ, harakat fathah terdapat pada huruf ....",
+        "options": ["ب", "ر", "ل"],
+        "answer": 1
+    },
+    {
+        "question": "32. Contoh lafaz yang tidak berharokat tasydid adalah ....",
+        "options": ["كُلٌّ", "التَّاجر", "كَفَرَ"],
+        "answer": 2
+    },
+    {
+        "question": "33. Di bawah ini yang tidak termasuk harakat-harakat dalam Al-Qur'an adalah ....",
+        "options": ["fathah", "tasydid", "centang"],
+        "answer": 2
+    },
+    {
+        "question": "34. Dalam menulis harakat tasydid, letak harakat di .... huruf.",
+        "options": ["bawah", "tengah", "atas"],
+        "answer": 2
+    },
+    {
+        "question": "35. Pada kata الشُّکرُ yang bertanda tasydid adalah ....",
+        "options": ["ر", "ك", "ش"],
+        "answer": 2
+    }
+];
+
+let currentQuestionIndex = 0;
+let score = 0;
+let namaMurid = '';
+let lives = 5;
+
+// --- [ FUNGSI SUARA BENAR ] ---
+function playCorrectSound() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/952/952-preview.mp3');
+    audio.play().catch(e => {
+        console.log('Tidak dapat memutar audio');
+    });
+}
+
+// --- [ FUNGSI SUARA SALAH ] ---
+function playWrongSound() {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2962/2962-preview.mp3');
+    audio.play().catch(e => {
+        console.log('Tidak dapat memutar audio');
+    });
+}
+
+// --- [ LOADING SCREEN ] ---
+window.addEventListener('load', () => {
+    const loader = document.getElementById('loader');
+    const mainWrapper = document.getElementById('mainWrapper');
+    
+    setTimeout(() => {
+        loader.classList.add('hidden');
+        mainWrapper.classList.add('loaded');
+    }, 2000);
+});
+
+function animateElement(element) {
+    if (!element) return;
+    element.classList.remove('animate-in');
+    void element.offsetWidth;
+    element.classList.add('animate-in');
+}
+
+// --- [ MULAI KUIS ] ---
+function startQuiz() {
+    namaMurid = document.getElementById('namaMurid').value.trim();
+    
+    // Validasi input nama
+    if (namaMurid && namaMurid.length > 0) {
+        document.getElementById('welcome').style.display = 'none';
+        document.getElementById('quiz').style.display = 'block';
+        document.getElementById('feedback').innerText = '';
+
+        animateElement(document.getElementById('quiz'));
+        loadQuestion();
+    } else {
+        alert('Silakan masukkan nama Anda!');
+        document.getElementById('namaMurid').focus();
+    }
+}
+
+// --- [ TAMPILKAN SOAL ] ---
+function loadQuestion() {
+    const questionElement = document.getElementById('question');
+    const optionsElement = document.getElementById('options');
+    const currentQuestion = questions[currentQuestionIndex];
+
+    questionElement.innerHTML = `<h4>${currentQuestion.question}</h4>`;
+    if (currentQuestion.image_url && currentQuestion.image_url !== "-") {
+        questionElement.innerHTML += `<img src="${currentQuestion.image_url}" class="question-image" alt="Gambar Soal">`;
+    }
+
+    optionsElement.innerHTML = '';
+    currentQuestion.options.forEach((option, index) => {
+        optionsElement.innerHTML += `
+            <div>
+                <input type="radio" name="option" id="option${index}" value="${index}">
+                <label for="option${index}">
+                    ${option}
+                </label>
+            </div>
+        `;
+    });
+
+    // Update progress bar
+    const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+    document.getElementById('progress-fill').style.width = `${progressPercentage}%`;
+    document.getElementById('progress-text').innerText = `${currentQuestionIndex + 1}/${questions.length}`;
+    
+    // Update tampilan nyawa dan skor
+    document.getElementById('lives').innerText = lives;
+    document.getElementById('score').innerText = score;
+    
+    // Update health bars
+    document.getElementById('lives-bar').style.width = `${(lives / 5) * 100}%`;
+    document.getElementById('score-bar').style.width = `${(score / questions.length) * 100}%`;
+
+    animateElement(questionElement);
+    animateElement(optionsElement);
+}
+
+// --- [ NAVIGASI & LOGIKA JAWABAN ] ---
+function nextQuestion() {
+    const selectedOption = document.querySelector('input[name="option"]:checked');
+    if (!selectedOption) {
+        alert('Pilih jawaban terlebih dahulu!');
+        return;
+    }
+
+    const answer = questions[currentQuestionIndex].answer;
+    const feedbackEl = document.getElementById('feedback');
+    
+    if (parseInt(selectedOption.value) === answer) {
+        score++;
+        feedbackEl.innerHTML = `<span style="color: var(--color-success);">✓ Benar!</span><br>Masya Allah, ${namaMurid} Cerdas!`;
+        feedbackEl.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+        playCorrectSound();
+    } else {
+        lives--;
+        playWrongSound();
+
+        feedbackEl.innerHTML = `<span style="color: var(--color-error);">✗ Salah!</span><br>Semangat ${namaMurid}, jangan menyerah!`;
+        feedbackEl.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+
+        // Update tampilan nyawa
+        document.getElementById('lives').innerText = lives;
+        document.getElementById('lives-bar').style.width = `${(lives / 5) * 100}%`;
+
+        // Jika nyawa habis -> GAME OVER
+        if (lives <= 0) {
+            return gameOver();
+        }
+    }
+
+    document.getElementById('score').innerText = score;
+    document.getElementById('score-bar').style.width = `${(score / questions.length) * 100}%`;
+
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+    } else {
+        endQuiz();
+    }
+}
+
+// --- [ GAME OVER ] ---
+function gameOver() {
+    const quizElement = document.getElementById('quiz');
+    quizElement.innerHTML = `
+        <div class="quiz-card">
+            <h2 style="color: var(--color-error);">Game Over!</h2>
+            <p>Maaf ${namaMurid}, nyawamu sudah habis.</p>
+            <p>Skor kamu: ${score} dari ${questions.length}</p>
+            <button class="btn btn-primary" onclick="location.reload()">
+                <span class="material-icons">refresh</span>
+                Coba Lagi
+            </button>
+        </div>
+    `;
+}
+
+// --- [ SELESAI KUIS ] ---
+function endQuiz() {
+    const quizElement = document.getElementById('quiz');
+    const finalMessage = score === questions.length ? 
+        `<span style="color: var(--color-success);">Luar biasa! Semua soal benar!</span>` : 
+        "Tetap semangat belajar ya!";
+        
+    quizElement.innerHTML = `
+        <div class="quiz-card">
+            <h2 style="color: var(--color-success);">Alhamdulillah, selesai!</h2>
+            <p>Nama: ${namaMurid}</p>
+            <p>Skor akhir: ${score} dari ${questions.length}</p>
+            <p>${finalMessage}</p>
+            <button class="btn btn-primary" onclick="location.reload()">
+                <span class="material-icons">refresh</span>
+                Coba Lagi
+            </button>
+        </div>
+    `;
+    animateElement(quizElement.querySelector('.quiz-card'));
+}
+</script>
+</body>
+</html>
